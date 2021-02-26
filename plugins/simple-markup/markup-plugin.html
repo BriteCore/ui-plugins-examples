@@ -19,10 +19,6 @@
             <el-row>
               <el-button v-for="type in buttonTypes" :type="type" @click="handleClick(type)">{{type}}</el-button>
             </el-row>
-            <el-row class="u-mt4">
-              <span>Change Background Color</span>
-              <el-color-picker v-model="bgColor" @change="changeBackgroundColor()"></el-color-picker>
-            </el-row>
           </div>`,
           data: {
             buttonTypes: [
@@ -33,7 +29,6 @@
               "info",
               "warning",
             ],
-            bgColor: "#399daf",
           },
           methods: {
             handleClick(type) {
@@ -45,10 +40,6 @@
                 success: "success",
               };
               this.parent.displayMessage(type, colorMapping[type]);
-            },
-            async changeBackgroundColor() {
-              const color = await this.parent.getData("bgColor");
-              this.parent.changeBackgroundColor(color);
             },
           },
         },
