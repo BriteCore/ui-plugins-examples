@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Buttons Plugin</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/@britecore/ui-plugins-client@0.9.2/dist/britecore-ui-plugins.js"></script>
+    <script>
+      let plugin = new BriteCorePlugin("Awesome Buttons Plugin");
+      function errorHandler(ctx) {
+        this.parent.displayErrors("Sample error message!!")
+      }
+      function successHandler(ctx) {
+        this.parent.displayMessage("Sample success message!!")
+      }
+      function popUpHandler(ctx) {
+        this.parent.displayInfoPopUp("Thank You For Using BriteCore UI Plugins", "BriteCore")
+      }
+      plugin.initialize({
+        "button-row": {
+          buttons: [
+            {
+              text: "Show Error",
+              callback: errorHandler,
+              visible: () => true,
+              enabled: () => true,
+            },
+            {
+              text: "Show Message",
+              callback: successHandler,
+              visible: () => true,
+              enabled: () => true,
+            },
+            {
+              text: "Show Popup",
+              callback: popUpHandler,
+              visible: () => true,
+              enabled: () => true,
+            },
+            
+          ],
+        },
+      });
+    </script>
+  </body>
+</html>

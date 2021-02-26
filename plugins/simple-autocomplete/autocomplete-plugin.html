@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoComplete Plugin</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/@britecore/ui-plugins-client@0.9.2/dist/britecore-ui-plugins.js"></script>
+    <script>
+      function querySearch(queryString, context) {
+        console.log(context);
+        const vals = [
+          { value: "vue", link: "https://github.com/vuejs/vue" },
+          { value: "element", link: "https://github.com/ElemeFE/element" },
+          { value: "cooking", link: "https://github.com/ElemeFE/cooking" },
+          { value: "mint-ui", link: "https://github.com/ElemeFE/mint-ui" },
+          { value: "vuex", link: "https://github.com/vuejs/vuex" },
+          { value: "vue-router", link: "https://github.com/vuejs/vue-router" },
+          { value: "babel", link: "https://github.com/babel/babel" },
+        ];
+        return vals.filter((item) => item.value.includes(queryString));
+      }
+
+      function handleSelect(item, context) {
+        this.parent.displayMessage(item.value);
+        console.log(item);
+        console.log(context);
+      }
+
+      let p = new BriteCorePlugin("Awesome Autocomplete Plugin");
+
+      p.initialize({
+        "auto-complete": {
+          inputs: [
+            {
+              placeholder: "Search",
+              querySearch,
+              handleSelect,
+              prefixIcon: ["far", "search"],
+              triggerOnFocus: true,
+            },
+          ],
+        },
+      });
+    </script>
+  </body>
+</html>

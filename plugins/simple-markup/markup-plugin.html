@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markup Plugin</title>
+  </head>
+  <body>
+    <script src="https://d1zol2vqugn1g2.cloudfront.net/britecore-ui-plugins.js"></script>
+    <script>
+      let plugin = new BriteCorePlugin("Awesome Markup Plugin");
+      function lookupDetails(ctx) {
+        this.parent.displayMessage("Hello there!!");
+      }
+      plugin.initialize({
+        markup: {
+          template: `
+          <div>
+            <el-row>
+              <el-button v-for="type in buttonTypes" :type="type" @click="handleClick(type)">{{type}}</el-button>
+            </el-row>
+            <el-row class="u-mt4">
+              <span>Change Background Color</span>
+              <el-color-picker v-model="bgColor" @change="changeBackgroundColor()"></el-color-picker>
+            </el-row>
+          </div>`,
+          data: {
+            buttonTypes: [
+              "default",
+              "primary",
+              "danger",
+              "success",
+              "info",
+              "warning",
+            ],
+            bgColor: "#399daf",
+          },
+          methods: {
+            handleClick(type) {
+              const colorMapping = {
+                info: "info",
+                primary: "info",
+                danger: "error",
+                warning: "warning",
+                success: "success",
+              };
+              this.parent.displayMessage(type, colorMapping[type]);
+            },
+            async changeBackgroundColor() {
+              const color = await this.parent.getData("bgColor");
+              this.parent.changeBackgroundColor(color);
+            },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
