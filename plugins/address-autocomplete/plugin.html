@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>GoogleMaps Plugin HTML</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/@britecore/ui-plugins-client@0.9.2/dist/britecore-ui-plugins.js"></script>
+    <script>
+      'use strict'
+
+      var PLUGIN_NAME = 'GoogleMaps'
+
+      var PRODUCT_LOCATIONS = {
+        texasAuto: '31.9686,-99.9018',
+      }
+
+      /**
+       * Removes any keys containing null values.
+       */
+      function removeEmpty(obj) {
+        return Object.keys(obj)
+          .filter(function (k) {
+            return obj[k] != null
+          })
+          .reduce(function (acc, k) {
+            acc[k] = obj[k]
+            return acc
+          }, {})
+      }
+
+      /**
+       * Makes the GET request to the GoogleMaps integration and returns the results.
+       *
+       * @param input The text input from the ui.
+       * @param product The product name.
+       */
+      async function fetchSuggestions(input, product, parent) {
+        var location = PRODUCT_LOCATIONS[product]
+        var request = new BriteCorePluginRequest(parent, PLUGIN_NAME)
+        var url = '/googlemaps/suggestions/?search=' + input + '&location=' + location
+
+        var response = await request.get(url)
+        return response.data
+      }
+
+      /**
+       * Makes the POST request to the GoogleMaps geocode API and returns the results.
+       *
+       * @param address The address to geocode.
+       */
+      async function fetchGeocoding(address, parent) {
+        var body = {
+          data: {
+            type: 'address',
+            attributes: {
+              formatted_address: address,
+            },
+          },
+        }
+        var request = new BriteCorePluginRequest(parent, PLUGIN_NAME)
+        var url = '/googlemaps/geocode/'
+
+        var response = await request.post(url, body)
+        return response.data
+      }
+
+      /**
+       * Makes the POST request to the SmartyStreets geocode API and returns the results.
+       *
+       * @param address The address to geocode.
+       */
+      async function validate(address, parent) {
+        var cleaned = removeEmpty(address)
+
+        var request = new BriteCorePluginRequest(parent, PLUGIN_NAME)
+        var url = '/smartystreets/geocode/'
+
+        var response = await request.post(url, {
+          data: {
+            type: 'address',
+            attributes: cleaned,
+          },
+        })
+        return response.data
+      }
+
+      /**
+       * Shape the address data for updating the quote.
+       *
+       * @param address The address to pass to the datamapper.
+       */
+      async function mapSelectedAddress(address) {
+        var mapped = {
+          line_1: address.address_line_1,
+          line_2: address.address_line_2,
+          city: address.address_city,
+          state: address.address_state,
+          zip_code: address.postal_code,
+        }
+
+        return Object.keys(mapped)
+          .filter(function (key) {
+            return mapped[key] !== undefined && mapped[key] !== null
+          })
+          .map(function (key) {
+            return {
+              op: 'replace',
+              path: '/field_answers/' + key,
+              value: mapped[key],
+            }
+          })
+      }
+
+      /**
+       * Provide autocomplete suggestions based on text input from the user.
+       *
+       * @param input The text input from the ui.
+       */
+      async function querySearch(input, context) {
+        if (!input || input.length < 3) return []
+
+        var product = context.quote.product_name
+        var json = await fetchSuggestions(input, product, this.parent)
+
+        var data = json.data
+
+        var suggestions = data.map(function (i) {
+          return {value: i.attributes.address}
+        })
+        return suggestions
+      }
+
+      /**
+       * Called when an address is selected by the user.
+       *
+       * @param address The address selected by the user.
+       */
+      async function handleSelect(address) {
+        try {
+          var geocoding = await fetchGeocoding(address.value, this.parent)
+          var validated = await validate(geocoding.data[0].attributes, this.parent)
+          var jsonPatch = await mapSelectedAddress(validated.data[0].attributes, this.parent)
+          this.parent.updateRisk(jsonPatch)
+          this.parent.displayMessage('Updated address')
+        } catch (error) {
+          console.error(error)
+          this.parent.displayErrors('Something went wrong while attempting to update the quote. Please try again.')
+        }
+      }
+
+      var plugin = new BriteCorePlugin(PLUGIN_NAME)
+
+      plugin.initialize({
+        'auto-complete': {
+          inputs: [
+            {
+              placeholder: 'Address',
+              querySearch: querySearch,
+              handleSelect: handleSelect,
+              prefixIcon: ['fas', 'location-arrow'],
+              triggerOnFocus: true,
+            },
+          ],
+        },
+      })
+    </script>
+  </body>
+</html>
